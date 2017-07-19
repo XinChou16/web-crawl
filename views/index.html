@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>爬虫查询</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css" >
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body> 
+<div class="container">
+    <div class="row table">
+        <div class="col-md-3 text-left ">
+           <div class="input-group top">
+                <span class="input-group-addon " id="basic-addon2">TOP</span>
+                <input type="text" class="form-control rank " placeholder="输入要查询的排名数" >
+
+            </div>
+        <button type="button" id="btn" class="query btn-info btn">查询</button>
+        <button type="button" id="btn" class="show btn-info btn">显示</button>
+        </div>
+    
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading">各大网站JS库引用情况</div>
+                <table class="table">
+                    <thead class="thead">
+                        <th>#</th>
+                        <th>网站</th>
+                        <th>数量</th>
+                    </thead>
+                    <tbody id="libShow">
+                        <!-- <tr>
+                            <td>1</td>
+                            <td>百度</td>
+                            <td>10</td>
+                        </tr> -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+        
+</div>
+
+<script src="./js/jquery-1.7.1.min.js"></script>
+<script src="./js/index.js"></script>
+</body>
+</html>

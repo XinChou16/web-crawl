@@ -1,0 +1,20 @@
+/* @xin chou 2017-07-16 */
+
+p{
+    color: #f00;
+}
+.center{
+    /*outline: 1px solid cyan;*/
+    position: absolute;
+    margin-top: 20px;
+    /*top: 50%;*/
+    /*left: 50%;*/
+    /*transform: translate(-50%,-50%);*/
+}
+.table, .check, .top, .libs, .query, .list-group, .panel, .show{
+    margin-top: 10px;
+}
+ 
+
+
+

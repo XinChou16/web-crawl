@@ -4,7 +4,8 @@
 var mongoose = require('mongoose'); 
 var jsLibSchema = new mongoose.Schema({
     name: String,
-    num: Number
+    libsNum: Number
 });
 
 module.exports = jsLibSchema;
+ 

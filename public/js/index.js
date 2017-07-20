@@ -41,7 +41,7 @@ $(function () {
                         libHtml += '<tr><td>';
                         libHtml += (i+1) + '</td><td>';
                         libHtml += item.name + '</td><td>';
-                        libHtml += item.num + '</td></tr>';
+                        libHtml += item.libsNum + '</td></tr>';
                     });
                     libShow.html(libHtml);
                 }

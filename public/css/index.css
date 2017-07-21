@@ -14,6 +14,12 @@ p{
 .table, .check, .top, .libs, .query, .list-group, .panel, .show{
     margin-top: 10px;
 }
+.pagination li{
+    cursor: pointer;
+}
+.table>thead>tr>th {
+    text-align: center;
+}
  
 
 

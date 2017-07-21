@@ -11,7 +11,9 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/getLibs',function(req,res,next){
-  JsLib.find({},function(err,data){
+  JsLib.find({})
+  .sort({'libsNum': -1})
+  .exec(function(err,data){
     res.json(data);
   })
 })
@@ -37,17 +39,19 @@ router.post('/query',function(req,res,next) {
 })
  
 var sites = [];
+var flag = 0;
 function analyData(data,rank) {
     if(data.indexOf('html') == -1) return false;
     var $ = cheerio.load(data);// 传递 HTML
     var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
-  
 
-    for (var i = 0; i < 5; i++) {
+    console.log('网站爬取中``')
+    for (var i = 0; i < 20; i++) { 
         var url = sitesArr[i].attribs.href;
         sites.push(url);//保存网址，添加wwww前缀
     }
     console.log(sites);
+    console.log('一共爬取' + sites.length +'个网站');
 
     getScript(sites);
 }
@@ -79,6 +83,7 @@ function getScript(urls) {
   };
 
   function storeLib(scriptFile,url){
+    flag++;// 是否存储数据的标志
     scriptFile.forEach(function(item,index){
       if (item.attribs.src != null) {
           obtainLibName(item.attribs.src,index);
@@ -91,21 +96,25 @@ function getScript(urls) {
       var libName = jsLink.match(reg).join('');
       var libFilter = libName.slice(0,libName.indexOf('.'));
 
-      src.push(libFilter);
+        src.push(libFilter);
     }
 
-    // scriptArr.push({
-    //     domain: url,
-    //     libsSrc: src
-    // })
-    // scriptArr.push(src)
-    // console.log(calcNum(src))
-    console.log(calcNum(src).length)
-    store2db(calcNum(src)) //存储数据到数据库
+    // console.log(src.length);
+    // console.log(calcNum(src).length)
+    (function(len,urlLength,src){
+      // console.log('length is '+ len)
+      if (len == 20 ) {// len长度为url的长度才向src和数据库里存储数据
+        // calcNum(src);//存储数据到数据库
+        console.log('存储数据中...')
+        var libSrc = calcNum(src);
+        store2db(libSrc);
+        console.log('一共存储' + libSrc.length + '条数据到数据库');
+      }
+    })(flag,urls.length,src)
   } 
 }// getScript END
 
-
+// 将缓存数据存储到数据库
 function store2db(libObj){
   console.log(libObj);
   for (var i = 0; i < libObj.length; i++) {

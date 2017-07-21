@@ -51,7 +51,7 @@ mongoose.connect('mongodb://localhost:27017/web-crawl',function(err){
     console.log('数据库连接失败')
   }else{
     console.log('数据库连接成功');
-    // 连接到数据库才开始监听
+    // 连接到数据库才开始监听 
     app.listen(8000);
     console.log('Running at port: 8000')
   }

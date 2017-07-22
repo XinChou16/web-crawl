@@ -10,10 +10,23 @@ router.get('/', function(req, res, next) {
   res.render('index');
 });
 
+// 显示库
 router.get('/getLibs',function(req,res,next){
   JsLib.find({})
   .sort({'libsNum': -1})
   .exec(function(err,data){
+    res.json(data);res.json('data');
+  })
+})
+
+// 库的查询
+router.post('/queryLib',function(req,res,next){
+  var libName = req.body.libName;
+
+  JsLib.find({
+    name: libName
+  }).exec(function(err,data){
+    if (err) console.log('查询出现错误' + err);
     res.json(data);
   })
 })
@@ -46,7 +59,7 @@ function analyData(data,rank) {
     var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
 
     console.log('网站爬取中``')
-    for (var i = 0; i < 20; i++) { 
+    for (var i = 0; i < 10; i++) { 
         var url = sitesArr[i].attribs.href;
         sites.push(url);//保存网址，添加wwww前缀
     }
@@ -62,7 +75,6 @@ function getScript(urls) {
   var scriptArr = [];
   var src = [];
   var jsSrc = [];
-
   for (var j = 0; j < urls.length; j++) {
       (function(i,callback){
         var options = {
@@ -76,7 +88,6 @@ function getScript(urls) {
           if(err) console.log('出现错误: '+err);
           var $ = cheerio.load(body);
           var scriptFile = $('script').toArray();
-          
           callback(scriptFile,options.url);
         })
     })(j,storeLib)
@@ -107,7 +118,7 @@ function getScript(urls) {
         // calcNum(src);//存储数据到数据库
         console.log('存储数据中...')
         var libSrc = calcNum(src);
-        store2db(libSrc);
+        // store2db(libSrc);
         console.log('一共存储' + libSrc.length + '条数据到数据库');
       }
     })(flag,urls.length,src)
@@ -122,9 +133,27 @@ function store2db(libObj){
       name: libObj[i].lib,
       libsNum: libObj[i].num
     });
-      jsLib.save(function(err,data){
-        if(err) console.log(err);
-      });
+
+    JsLib.find({name: libObj[i].lib})
+    .exec(function(err,data){
+      if(err) console.log(err);
+      if (data.length == 0){
+        jsLib.save(function(err,data){
+          if(err) console.log('保存数据出错' + err);
+        });
+      }
+      // else{
+      //   JsLib.findOneAndUpdate({
+      //     name: data.lib
+      //   },{
+      //     $set:{libsNum: data.num}
+      //   }).exec(function(err,doc){
+      //     if(err){
+      //       console.log('更新数据出错' + err);
+      //     }
+      //   })
+      // }
+    })
   }
 }
 // JS库排序算法

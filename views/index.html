@@ -1,50 +1,106 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
+
 <head>
     <meta charset="UTF-8">
     <title>爬虫查询</title>
-    <link rel="stylesheet" href="./css/bootstrap.min.css" >
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
     <link rel="stylesheet" href="./css/index.css">
 </head>
-<body> 
-<div class="container"> 
-    <div class="row table">
-        <div class="col-md-3 text-left ">
-           <div class="input-group top">
-                <span class="input-group-addon " id="basic-addon2">TOP</span>
-                <input type="text" class="form-control rank " placeholder="输入要查询的排名数" >
 
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center title">
+                    <h1>WEB小爬虫 - 爬取Alexa.cn排行榜的网站</h1>
+                </div>
             </div>
-        <button type="button" id="btn" class="query btn-info btn">查询</button>
-        <button type="button" id="btn" class="show btn-info btn">显示</button>
-        </div>
-    
-        <div class="col-md-5 text-center">
-            <div class="panel panel-default">
-                <div class="panel-heading">各大网站JS库引用情况</div>
-                <table class="table">
-                    <thead class="thead">
-                        <th>#</th>
-                        <th>JS库名</th>
-                        <th>引用数量</th>
-                    </thead>
-                    <tbody id="libShow">
-                        <!-- <tr>
-                            <td>1</td>
-                            <td>百度</td>
-                            <td>10</td>
-                        </tr> -->
-                    </tbody>
-                </table>
-            </div>
-            <ul id='page'></ul>
         </div>
     </div>
-        
-</div>
 
-<script src="./js/jquery-1.7.1.min.js"></script>
-<script src="./js/bootstrap-paginator.js"></script>
-<script src="./js/index.js"></script>
+    <div class="inputArea">
+        <div class="container">
+            <div class="row table">
+                <div class="col-md-3 text-center ">
+                     <div class="input-group top"> 
+                        <span class="input-group-addon " id="basic-addon2">TOP</span>
+                        <input type="text" class="form-control rank " placeholder="10">
+                     </div> 
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="btn" class="query btn-info btn ib">立刻爬虫</button>
+                </div>
+                <div class="col-md-2">
+                    
+                    <button type="button" id="btn" class="show btn-info btn ib">显示</button>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group top">
+                        <input type="text" class="form-control libName ib" placeholder="输入要查询的库名">
+
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="btn" class="queryLib btn-success btn">查询</button>
+                </div>
+            </div>
+
+        </div>
+    </div>    
+
+    <div class="displayResult" style="display:none">
+        <div class="container">
+            <div class="row">
+                <!-- <div class="col-md-6 text-center">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">网站排名</div>
+                        <table class="table">
+                            <thead class="thead">
+                                <th>#</th>
+                                <th>网址</th>
+                            </thead>
+                            <tbody id="siteShow">
+                                <!-- <tr>
+                                <td>1</td>
+                                <td>百度</td>
+                                <td>10</td>
+                            </tr> -->
+                            <!-- </tbody>
+                        </table>
+                    </div>
+                </div> --> 
+                <div class="col-md-3"></div>
+                <div class="col-md-6 text-center ">
+                     <div class="panel panel-default">
+                        <div class="panel-heading">各大网站JS库引用情况</div>
+                        <table class="table">
+                            <thead class="thead">
+                                <th>#</th>
+                                <th>JS库名</th>
+                                <th>引用数量</th>
+                            </thead>
+                            <tbody id="libShow">
+                                <!-- <tr>
+                                <td>1</td>
+                                <td>百度</td>
+                                <td>10</td>
+                            </tr> -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul id='page'></ul>
+                </div>
+                <div class="col-md-3"></div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="./js/jquery-1.7.1.min.js"></script>
+    <script src="./js/bootstrap-paginator.js"></script>
+    <script src="./js/index.js"></script>
 </body>
+
 </html>

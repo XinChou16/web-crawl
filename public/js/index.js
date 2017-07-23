@@ -8,7 +8,10 @@ $(function () {
     var query = $('.query'),
         rank = $('.rank'),
         show = $('.show'),
-        libShow = $('#libShow');
+        queryLib = $('.queryLib'),
+        libShow = $('#libShow'),
+        libName = $('.libName'),
+        displayResult = $('.displayResult');
 
     var checkLib = (function(){
 
@@ -21,6 +24,36 @@ $(function () {
                 },
                 function(data){
                     console.log(data);
+                }
+            )
+        });
+        queryLib.click(function(){
+            var inputLibName = libName.val();
+            if (inputLibName.length == 0) {
+                alert('请输入库名~');
+                return;
+            }
+            $.post(
+                '/queryLib',
+                {
+                    libName: inputLibName,
+                },
+                function(data){
+                    if(data.length == 0){
+                        alert('没有查询到名为' + inputLibName + '的库');
+                        libName.val('');
+                        libName.focus();
+                        libShow.html('')
+                        return;
+                    }
+                    var libHtml = '';
+                    for (var i = 0; i < data.length; i++) {
+                        libHtml += '<tr><td>';
+                        libHtml += (i+1) + '</td><td>';
+                        libHtml += data[i].name + '</td><td>';
+                        libHtml += data[i].libsNum + '</td></tr>';
+                    }
+                    libShow.html(libHtml);
                 }
             )
         });
@@ -43,6 +76,7 @@ $(function () {
                         libHtml += data[i].name + '</td><td>';
                         libHtml += data[i].libsNum + '</td></tr>';
                     }
+                    displayResult.show();
                     libShow.html(libHtml);// 点击显示按钮，显示前20项数据
                     _paging(data);
                 }

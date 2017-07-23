@@ -15,7 +15,7 @@ router.get('/getLibs',function(req,res,next){
   JsLib.find({})
   .sort({'libsNum': -1})
   .exec(function(err,data){
-    res.json(data);res.json('data');
+    res.json(data);
   })
 })
 
@@ -59,12 +59,13 @@ function analyData(data,rank) {
     var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
 
     console.log('网站爬取中``')
-    for (var i = 0; i < 10; i++) { 
+    for (var i = 0; i < 10; i++) { // ***这里后面要改，默认爬取前10名
         var url = sitesArr[i].attribs.href;
         sites.push(url);//保存网址，添加wwww前缀
     }
     console.log(sites);
     console.log('一共爬取' + sites.length +'个网站');
+    console.log('存储数据中...')
 
     getScript(sites);
 }
@@ -112,16 +113,14 @@ function getScript(urls) {
 
     // console.log(src.length);
     // console.log(calcNum(src).length)
-    (function(len,urlLength,src){
+    (function(len,urlLength,src,rank){
       // console.log('length is '+ len)
-      if (len == 20 ) {// len长度为url的长度才向src和数据库里存储数据
-        // calcNum(src);//存储数据到数据库
-        console.log('存储数据中...')
+      if (len == 10 ) {// len长度为url的长度才向src和数据库里存储数据，防止重复储存
+        // calcNum(src);//存储数据到数据库 // ***这里后面要改，默认爬取前10名
         var libSrc = calcNum(src);
-        // store2db(libSrc);
-        console.log('一共存储' + libSrc.length + '条数据到数据库');
+        store2db(libSrc);
       }
-    })(flag,urls.length,src)
+    })(flag,urls.length,src,rank)
   } 
 }// getScript END
 
@@ -129,32 +128,25 @@ function getScript(urls) {
 function store2db(libObj){
   console.log(libObj);
   for (var i = 0; i < libObj.length; i++) {
-    var jsLib = new JsLib({
-      name: libObj[i].lib,
-      libsNum: libObj[i].num
-    });
+    (function(i){
+      var jsLib = new JsLib({
+          name: libObj[i].lib,
+          libsNum: libObj[i].num
+      });
+      
+      JsLib.findOne({'name': libObj[i].lib},function(err,libDoc){
+        if(err) console.log(err);
+        // console.log(libDoc)
+        if (!libDoc){
+          jsLib.save(function(err,result){
+            if(err) console.log('保存数据出错' + err);
+          });
+        }
 
-    JsLib.find({name: libObj[i].lib})
-    .exec(function(err,data){
-      if(err) console.log(err);
-      if (data.length == 0){
-        jsLib.save(function(err,data){
-          if(err) console.log('保存数据出错' + err);
-        });
-      }
-      // else{
-      //   JsLib.findOneAndUpdate({
-      //     name: data.lib
-      //   },{
-      //     $set:{libsNum: data.num}
-      //   }).exec(function(err,doc){
-      //     if(err){
-      //       console.log('更新数据出错' + err);
-      //     }
-      //   })
-      // }
-    })
+      })
+    })(i)
   }
+  console.log('一共存储' + libObj.length + '条数据到数据库');
 }
 // JS库排序算法
 function calcNum(arr){

@@ -3,23 +3,27 @@ var mongoose = require('mongoose');
 var request = require('request');
 var cheerio =require('cheerio');
 var router = express.Router();
-var JsLib = require('../model/jsLib')
+var JsLib = require('../model/jsLib');
+var schedule = require('node-schedule');
+
+var sites = [];
+var src = [];
+var flag = 0;
 
 /* 显示主页 */
 router.get('/', function(req, res, next) {
+
+  // JsLib.find({})
+  // .sort({'num': -1})
+  // .exec(function(err,data){
+  //   res.json(data);
+  // })
+
   res.render('index');
 });
 
-// 显示库
-router.get('/getLibs',function(req,res,next){
-  JsLib.find({})
-  .sort({'libsNum': -1})
-  .exec(function(err,data){
-    res.json(data);
-  })
-})
 
-// 库的查询
+// 前台库的查询
 router.post('/queryLib',function(req,res,next){
   var libName = req.body.libName;
 
@@ -31,50 +35,64 @@ router.post('/queryLib',function(req,res,next){
   })
 })
 
+// 爬虫post
 router.post('/query',function(req,res,next) {
   var rank = req.body.rank;
   var len = Math.round(rank/20);
-  
-  for (var i = 1; i < len+1; i++) {
-    (function(i){
-      var options = {
-        url: 'http://www.alexa.cn/siterank/' + i,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
-        }
-      };
-      request(options, function (err, response, body) {
-          analyData(body,rank);
-      })
-    })(i)
-  }
+  scheduleRun();
   res.json('保存成功')
 })
- 
-var sites = [];
-var flag = 0;
-function analyData(data,rank) {
-    if(data.indexOf('html') == -1) return false;
-    var $ = cheerio.load(data);// 传递 HTML
-    var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
 
-    console.log('网站爬取中``')
-    for (var i = 0; i < 10; i++) { // ***这里后面要改，默认爬取前10名
-        var url = sitesArr[i].attribs.href;
-        sites.push(url);//保存网址，添加wwww前缀
+function scheduleRun(){
+  var counter = 1;
+  // var j = schedule.scheduleJob('30 * * * * *',function(){
+    for (var i = 1; i < 2; i++) {
+      (function(i){
+        var options = {
+          url: 'http://www.alexa.cn/siterank/' + i,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+          }
+        };
+        request(options, function (err, response, body) {
+            analyData(body);
+        })
+      })(i)
     }
-    console.log(sites);
-    console.log('一共爬取' + sites.length +'个网站');
-    console.log('存储数据中...')
 
-    getScript(sites);
+    console.log('爬虫时间为:' + new Date());
+    counter++;
+  // })
+
+  // setTimeout(function() {
+  //   console.log('定时器取消')
+  //   j.cancel;
+  // }, 50000);
+}
+// scheduleRun();
+
+function analyData(data) {
+  if(data.indexOf('html') == -1) return false;
+  var $ = cheerio.load(data);// 传递 HTML
+  var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
+
+  // console.log('网站爬取中``')
+  for (var i = 0; i < 10; i++) { // ***默认爬取前10名
+      var url = sitesArr[i].attribs.href;
+      sites.push(url);
+  }
+  // console.log(sites);
+  // console.log('一共爬取' + sites.length +'个网站');
+  // console.log('存储数据中...')
+
+  getScript(sites);
+  sites = [];// 清空缓存数组
 }
 
 
 // 获取JS库文件地址
 function getScript(urls) {
   var scriptArr = [];
-  var src = [];
   var jsSrc = [];
   for (var j = 0; j < urls.length; j++) {
       (function(i,callback){
@@ -86,70 +104,71 @@ function getScript(urls) {
           }
 
         request(options, function (err, res, body) {
-          if(err) console.log('出现错误: '+err);
+          if(err) console.log('请求出现错误: '+err);
           var $ = cheerio.load(body);
           var scriptFile = $('script').toArray();
           callback(scriptFile,options.url);
         })
     })(j,storeLib)
   };
+}// getScript END
 
-  function storeLib(scriptFile,url){
-    flag++;// 是否存储数据的标志
-    scriptFile.forEach(function(item,index){
-      if (item.attribs.src != null) {
-          obtainLibName(item.attribs.src,index);
-      }
-    })
-  
-      
-    function obtainLibName(jsLink,i){
-      var reg = /[^\/\\]+$/g;
-      var libName = jsLink.match(reg).join('');
-      var libFilter = libName.slice(0,libName.indexOf('.'));
 
+// 提取网站script中的src
+function storeLib(scriptFile,url){
+  flag++;
+  scriptFile.forEach(function(item,index){
+    if (item.attribs.src != null) {
+        var jsLink = item.attribs.src;
+        var libName = jsLink.match(/[^\/\\]+$/g).join('');
+        var libFilter = libName.split(/[-|.|,]/ig)[0];
+        
         src.push(libFilter);
     }
+  })
+  console.log('正在爬取第' + flag + '个网站，网站主页是' + url)
+  if (flag == 10) {
+    // console.log(src);
+    var libObj = sortJsLib(src)
+    store2db(libObj);
+    console.log(libObj);
+    src = [];
+    flag = 0;
+  }
+} 
 
-    // console.log(src.length);
-    // console.log(calcNum(src).length)
-    (function(len,urlLength,src,rank){
-      // console.log('length is '+ len)
-      if (len == 10 ) {// len长度为url的长度才向src和数据库里存储数据，防止重复储存
-        // calcNum(src);//存储数据到数据库 // ***这里后面要改，默认爬取前10名
-        var libSrc = calcNum(src);
-        store2db(libSrc);
-      }
-    })(flag,urls.length,src,rank)
-  } 
-}// getScript END
 
 // 将缓存数据存储到数据库
 function store2db(libObj){
-  console.log(libObj);
+  // console.log(libObj.length);
   for (var i = 0; i < libObj.length; i++) {
     (function(i){
-      var jsLib = new JsLib({
-          name: libObj[i].lib,
-          libsNum: libObj[i].num
-      });
+      var value = libObj[i].lib;
+      var numValue = libObj[i].num;
       
-      JsLib.findOne({'name': libObj[i].lib},function(err,libDoc){
-        if(err) console.log(err);
-        // console.log(libDoc)
-        if (!libDoc){
-          jsLib.save(function(err,result){
-            if(err) console.log('保存数据出错' + err);
-          });
+      JsLib.find({'name': value},function(err,data){
+        if(err) {console.log('查找出现错误' + err); return;}
+        if (data.length == 0){//保存  
+          var jslib = new JsLib({
+              name: value,
+              num: numValue
+          })
+          jslib.save();
+        }else{//更新
+          JsLib.update({name: value},{$set:{'num': numValue}},function(err,data){
+            if(err) return;
+            // console.log('更新数据成功');
+          })
         }
 
       })
+    
     })(i)
   }
-  console.log('一共存储' + libObj.length + '条数据到数据库');
 }
+
 // JS库排序算法
-function calcNum(arr){
+function sortJsLib(arr){
     var libObj = {};
     var result = [];
     for (var i = 0, len = arr.length; i < len; i++) {
@@ -162,18 +181,15 @@ function calcNum(arr){
     }
    
     for(var o in libObj){
+      // if(libObj[o] > 1 && o.length > 3){
         result.push({
             lib: o,
             num: libObj[o]
         })
+      // }
     }
-
-    result.sort(function(a,b){
-        return b.num - a.num;
-    });
 
     return result;
 }
-
 
 module.exports = router;

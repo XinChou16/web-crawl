@@ -3,8 +3,14 @@
  */
 var mongoose = require('mongoose'); 
 var jsLibSchema = new mongoose.Schema({
-    name: String,
-    libsNum: Number
+    name: {
+        type: String,
+        index: {
+            unique: true,
+            dropDups: true
+        }
+    },
+    num: Number
 });
 
 module.exports = jsLibSchema;

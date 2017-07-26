@@ -23,7 +23,7 @@ $(function () {
                     rank: rank.val(),
                 },
                 function(data){
-                    console.log(data);
+                    // console.log(data);
                 }
             )
         });
@@ -51,7 +51,7 @@ $(function () {
                         libHtml += '<tr><td>';
                         libHtml += (i+1) + '</td><td>';
                         libHtml += data[i].name + '</td><td>';
-                        libHtml += data[i].libsNum + '</td></tr>';
+                        libHtml += data[i].num + '</td></tr>';
                     }
                     libShow.html(libHtml);
                 }
@@ -60,28 +60,31 @@ $(function () {
       }
 
       function _showLibs(){
-        show.click(function(){
             $.get(
-                '/getLibs',
+                '/ge',
                 {
                     rank: rank.val(),
                 },
                 function(data){
                     console.log('一共返回'+ data.length + '条数据');
-                    console.log(data)
+                    // console.log(data)
                     var libHtml = '';
-                    for (var i = 0; i < 20; i++) {
+                    var end = data.length;
+                    
+                    if (end > 20) {
+                        end = 20;
+                    }
+                    for (var i = 0; i < end; i++) {
                         libHtml += '<tr><td>';
                         libHtml += (i+1) + '</td><td>';
                         libHtml += data[i].name + '</td><td>';
-                        libHtml += data[i].libsNum + '</td></tr>';
+                        libHtml += data[i].num + '</td></tr>';
                     }
                     displayResult.show();
                     libShow.html(libHtml);// 点击显示按钮，显示前20项数据
                     _paging(data);
                 }
             )
-        });
       }
 
       //翻页器
@@ -119,7 +122,7 @@ $(function () {
                     pHtml += '<tr><td>';
                     pHtml += (i+1) + '</td><td>';
                     pHtml += libObj[i].name + '</td><td>';
-                    pHtml += libObj[i].libsNum + '</td></tr>';
+                    pHtml += libObj[i].num + '</td></tr>';
                 }
                 libShow.html(pHtml);
             }

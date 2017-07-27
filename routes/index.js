@@ -9,6 +9,7 @@ var schedule = require('node-schedule');
 var sites = [];
 var src = [];
 var flag = 0;
+var counter = 1;
 
 /* 显示主页 */
 router.get('/', function(req, res, next) {
@@ -39,45 +40,46 @@ router.post('/queryLib',function(req,res,next){
 router.post('/query',function(req,res,next) {
   var rank = req.body.rank;
   var len = Math.round(rank/20);
-  scheduleRun();
+  // scheduleRun();
   res.json('保存成功')
 })
 
-function scheduleRun(){
-  var counter = 1;
-  // var j = schedule.scheduleJob('30 * * * * *',function(){
-    for (var i = 1; i < 2; i++) {
-      (function(i){
-        var options = {
-          url: 'http://www.alexa.cn/siterank/' + i,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
-          }
-        };
-        request(options, function (err, response, body) {
-            analyData(body);
-        })
-      })(i)
-    }
-
-    console.log('爬虫时间为:' + new Date());
+function scheduleRun(){ 
+  var j = schedule.scheduleJob('30 * * * * *',function(){
+    crawlSite();
+    console.log('第'+counter +'次爬虫时间为:' + new Date());
     counter++;
-  // })
+  })
 
   // setTimeout(function() {
   //   console.log('定时器取消')
   //   j.cancel;
   // }, 50000);
 }
-// scheduleRun();
+scheduleRun();
+
+function crawlSite() {
+  for (var i = 1; i < 2; i++) {
+    (function(i){
+      var options = {
+        url: 'http://www.alexa.cn/siterank/' + i,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+        }
+      };
+      request(options, function (err, response, body) {
+          analyData(body);
+      })
+    })(i)
+  }
+}
 
 function analyData(data) {
   if(data.indexOf('html') == -1) return false;
   var $ = cheerio.load(data);// 传递 HTML
   var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
 
-  // console.log('网站爬取中``')
-  for (var i = 0; i < 10; i++) { // ***默认爬取前10名
+  for (var i = 0; i < 20; i++) { // ***默认爬取前10名
       var url = sitesArr[i].attribs.href;
       sites.push(url);
   }
@@ -126,12 +128,12 @@ function storeLib(scriptFile,url){
         src.push(libFilter);
     }
   })
-  console.log('正在爬取第' + flag + '个网站，网站主页是' + url)
+  // console.log('正在爬取第' + flag + '个网站，网站主页是' + url)
   if (flag == 10) {
     // console.log(src);
     var libObj = sortJsLib(src)
     store2db(libObj);
-    console.log(libObj);
+    // console.log(libObj);
     src = [];
     flag = 0;
   }
@@ -181,12 +183,12 @@ function sortJsLib(arr){
     }
    
     for(var o in libObj){
-      // if(libObj[o] > 1 && o.length > 3){
+      if(libObj[o] > 1 && o.length > 3){
         result.push({
             lib: o,
             num: libObj[o]
         })
-      // }
+      }
     }
 
     return result;

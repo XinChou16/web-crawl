@@ -13,16 +13,18 @@ var counter = 1;
 
 /* 显示主页 */
 router.get('/', function(req, res, next) {
-
-  // JsLib.find({})
-  // .sort({'num': -1})
-  // .exec(function(err,data){
-  //   res.json(data);
-  // })
-
   res.render('index');
 });
 
+// 显示爬虫数据
+router.post('/',function(req,res,next){
+
+  JsLib.find({})
+  .sort({'num': -1})
+  .exec(function(err,data){
+    res.json(data);
+  })
+})
 
 // 前台库的查询
 router.post('/queryLib',function(req,res,next){
@@ -36,30 +38,27 @@ router.post('/queryLib',function(req,res,next){
   })
 })
 
-// 爬虫post
-router.post('/query',function(req,res,next) {
-  var rank = req.body.rank;
-  var len = Math.round(rank/20);
-  // scheduleRun();
-  res.json('保存成功')
+// 爬虫get
+router.get('/crawl',function(req,res,next) {
+  scheduleRun();
+  res.json('爬虫成功')
 })
 
-function scheduleRun(){ 
-  var j = schedule.scheduleJob('30 * * * * *',function(){
+function scheduleRun(){
+  var rule = new schedule.RecurrenceRule();
+  var times = [1,21,41];
+
+  rule.minute = times; 
+  schedule.scheduleJob(rule,function(){
     crawlSite();
     console.log('第'+counter +'次爬虫时间为:' + new Date());
     counter++;
   })
-
-  // setTimeout(function() {
-  //   console.log('定时器取消')
-  //   j.cancel;
-  // }, 50000);
 }
 scheduleRun();
 
 function crawlSite() {
-  for (var i = 1; i < 2; i++) {
+  for (var i = 1; i < 3; i++) {
     (function(i){
       var options = {
         url: 'http://www.alexa.cn/siterank/' + i,
@@ -68,6 +67,8 @@ function crawlSite() {
         }
       };
       request(options, function (err, response, body) {
+          if(err) console.log('请求出现错误: '+err);
+          if(body === 'undefined') return;
           analyData(body);
       })
     })(i)
@@ -75,13 +76,14 @@ function crawlSite() {
 }
 
 function analyData(data) {
-  if(data.indexOf('html') == -1) return false;
   var $ = cheerio.load(data);// 传递 HTML
   var sitesArr = $('.info-wrap .domain-link a').toArray();//将所有a链接存为数组
-
-  for (var i = 0; i < 20; i++) { // ***默认爬取前10名
+  
+  for (var i = 0; i < 20; i++) { 
       var url = sitesArr[i].attribs.href;
-      sites.push(url);
+      if(url){
+        sites.push(url);
+      }
   }
   // console.log(sites);
   // console.log('一共爬取' + sites.length +'个网站');
@@ -107,13 +109,14 @@ function getScript(urls) {
 
         request(options, function (err, res, body) {
           if(err) console.log('请求出现错误: '+err);
+          if(body === 'undefined') return;
           var $ = cheerio.load(body);
           var scriptFile = $('script').toArray();
           callback(scriptFile,options.url);
         })
     })(j,storeLib)
   };
-}// getScript END
+}
 
 
 // 提取网站script中的src
@@ -129,11 +132,10 @@ function storeLib(scriptFile,url){
     }
   })
   // console.log('正在爬取第' + flag + '个网站，网站主页是' + url)
-  if (flag == 10) {
-    // console.log(src);
+  if (flag == 20) {
     var libObj = sortJsLib(src)
+    
     store2db(libObj);
-    // console.log(libObj);
     src = [];
     flag = 0;
   }
@@ -169,7 +171,7 @@ function store2db(libObj){
   }
 }
 
-// JS库排序算法
+// JS库判断是否重复方法
 function sortJsLib(arr){
     var libObj = {};
     var result = [];
@@ -183,7 +185,7 @@ function sortJsLib(arr){
     }
    
     for(var o in libObj){
-      if(libObj[o] > 1 && o.length > 3){
+      if(libObj[o] > 1 && o.length > 3 && o.indexOf('=') == -1){
         result.push({
             lib: o,
             num: libObj[o]
